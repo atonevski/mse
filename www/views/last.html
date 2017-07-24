@@ -3,7 +3,30 @@
   </ion-nav-title>
   <ion-pane>
     <ion-content>
-      Date: {{ date }}
+      <div class='card'>
+        <h3>Last sales for {{ date | date: 'EEEE, MMMM d yyyy' }}</h3>
+      </div>
+      <div class='list card'>
+        <div class='item item-divider'>
+          <div class='row row-no-padding'>
+            <div class='col col-50'>Company</div>
+            <div class='col col-15 text-right'>Price</div>
+            <div class='col col-15 text-right'>Shares</div>
+            <div class='col col-20 text-right'>Total</div>
+          </div>
+        </div>
+        <div class='item no-padding text-wrap' ng-repeat='t in trns'>
+          <div class='row row-no-padding'>
+            <div class='col col-50 cname'>{{ t.name }}</div>
+            <div class='col col-15 text-right'>{{ t.price | number: 0 }}</div>
+            <div class='col col-15 text-right'>{{ t.shares | number: 0 }}</div>
+            <div class='col col-20 text-right'>{{ t.price * t.shares | number: 0 }}</div>
+          </div>
+        </div>
+      </div>
+      <div class='card'>
+        <h4>Total&nbsp;{{ total | number: 0 }}</h4>
+      </div>
     </ion-content>
   </ion-pane>
 </ion-view>

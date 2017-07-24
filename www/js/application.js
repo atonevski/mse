@@ -54,14 +54,14 @@ angular.module('app.last', []).controller('Last', function($scope, $http, utils)
   var date, loadLast;
   date = new Date();
   date = date.getHours < 14 ? utils.prevValidDate(date) : date;
-  loadLast = function(d) {
-    return $http.get(utils.mseUrl(d), {
+  loadLast = function(date) {
+    return $http.get(utils.mseUrl(date), {
       responseType: "arraybuffer"
     }).then(function(res) {
-      var arr, bstr, buf, data, i, rcnt, workbook, ws;
+      var Ar, Br, Hr, Ir, arr, bstr, buf, d, data, h, i, j, k, len, name, r, rcount, ref, ref1, total, trns, workbook, ws;
       console.log("Successful load " + d);
       console.log(res);
-      $scope.date = d.toISOString();
+      console.log(utils.mseUrl(date));
       buf = res.data;
       data = new Uint8Array(buf);
       arr = [];
@@ -74,10 +74,50 @@ angular.module('app.last', []).controller('Last', function($scope, $http, utils)
         type: "binary"
       });
       ws = workbook.Sheets.Sheet1;
-      rcnt = ws['!rows'].length;
-      return console.log("Total rows: " + rcnt);
+      rcount = ws['!rows'].length;
+      console.log("Total rows: " + rcount);
+      h = {};
+      for (r = j = 8, ref = rcount; 8 <= ref ? j <= ref : j >= ref; r = 8 <= ref ? ++j : --j) {
+        Ir = "I" + r;
+        Ar = "A" + r;
+        Br = "B" + r;
+        Hr = "H" + r;
+        if (ws[Ir] == null) {
+          continue;
+        }
+        if (ws[Ir].v <= 0) {
+          continue;
+        }
+        if (h[ws[Ar].v] == null) {
+          h[ws[Ar].v] = {
+            price: ws[Br] != null ? ws[Br].v : ws[Hr].v,
+            shares: ws[Ir].v,
+            count: 1
+          };
+        } else {
+          h[ws[Ar].v].count++;
+          h[ws[Ar].v].price += ws[Br] != null ? ws[Br].v : ws[Hr].v;
+          h[ws[Ar].v].shares += ws[Ir].v;
+        }
+      }
+      trns = [];
+      total = 0;
+      ref1 = Object.keys(h).sort();
+      for (k = 0, len = ref1.length; k < len; k++) {
+        name = ref1[k];
+        trns.push({
+          name: name,
+          price: h[name].price / h[name].count,
+          shares: h[name].shares
+        });
+        total += h[name].price / h[name].count * h[name].shares;
+      }
+      $scope.date = date;
+      $scope.trns = trns;
+      $scope.total = total;
+      return console.log(trns);
     }, function(res) {
-      if (res.status === '404') {
+      if (res.status === 404) {
         return loadLast(prevValidDate(d));
       } else {
         return console.log("Received status: " + res.status);

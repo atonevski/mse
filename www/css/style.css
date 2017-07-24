@@ -1,1 +1,14 @@
 /* Empty. Add your own CSS if you like */
+
+.no-padding { padding: 0 !important; }
+
+.item {
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 13px;
+}
+.cname { 
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
