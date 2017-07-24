@@ -1,5 +1,14 @@
 {
   "name": "mse",
-  "app_id": "",
-  "type": "ionic1"
+  "app_id": "mse.atonevski.com.github",
+  "type": "ionic1",
+  "watch": {
+    "sass": ["./scss/**/*.scss"],
+    "coffee": ["./www/coffee/**/*.coffee"]
+  },
+  "watchPatterns": [
+    "scss/**/*",
+    "www/coffee/**/*.coffee"
+  ],
+  "gulpStartupTasks": [ "coffee", "sass" ]
 }
