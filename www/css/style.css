@@ -12,3 +12,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
 }
+.item-divider {
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}

@@ -4,7 +4,8 @@
 # Angular modules 'app' is the name of this angular module example (also set
 # in a <body> attribute in index.html) the 2nd parameter is an array of
 # 'requires'
-angular.module 'app', ['ionic', 'app.last'] # don't forget your modules
+angular.module 'app', ['ionic', 'ionic-datepicker', 'app.last',
+                       'app.by.date'] # don't forget your modules
 
 .run ($ionicPlatform) ->
   $ionicPlatform.ready () ->
@@ -52,6 +53,11 @@ angular.module 'app', ['ionic', 'app.last'] # don't forget your modules
       url:          '/last'
       templateUrl:  'views/last.html'
       controller:   'Last'
+    }
+    .state 'by-date', {
+      url:          '/by-date'
+      templateUrl:  'views/by-date.html'
+      controller:   'ByDate'
     }
 
   $urlRouterProvider.otherwise '/home'

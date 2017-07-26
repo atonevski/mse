@@ -1,4 +1,4 @@
-angular.module('app', ['ionic', 'app.last']).run(function($ionicPlatform) {
+angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date']).run(function($ionicPlatform) {
   return $ionicPlatform.ready(function() {
     if (window.cordova && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
@@ -43,11 +43,35 @@ angular.module('app', ['ionic', 'app.last']).run(function($ionicPlatform) {
     url: '/last',
     templateUrl: 'views/last.html',
     controller: 'Last'
+  }).state('by-date', {
+    url: '/by-date',
+    templateUrl: 'views/by-date.html',
+    controller: 'ByDate'
   });
   return $urlRouterProvider.otherwise('/home');
 }).controller('Main', function($scope, utils) {
   $scope.weekDays = utils.weekDays;
   return $scope.hour = (new Date()).getHours();
+});
+
+angular.module('app.by.date', []).controller('ByDate', function($scope, ionicDatePicker, utils) {
+  var obj, today;
+  today = new Date();
+  obj = {
+    callback: function(v) {
+      return console.log("Return val from datepicker: " + v);
+    },
+    disableWeekdays: [0, 6],
+    from: new Date(2012, 1, 1),
+    to: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    inputDate: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    templateType: 'popup',
+    mondayFirst: true,
+    closeOnSelect: true
+  };
+  return $scope.openDatePicker = function() {
+    return ionicDatePicker.openDatePicker(obj);
+  };
 });
 
 angular.module('app.last', []).controller('Last', function($scope, $http, utils) {
