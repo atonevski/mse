@@ -29,9 +29,9 @@ angular.module 'app', ['ionic', 'app.last'] # don't forget your modules
       d.toISOString().slice(0, 10).replace /-/g, ""
     prevValidDate:  (d) ->
       switch d.getDay()
-        when 0 then daysBefore d, 2
-        when 1 then daysBefore d, 3
-        else daysBefore d, 1
+        when 0 then utils.daysBefore d, 2
+        when 1 then utils.daysBefore d, 3
+        else utils.daysBefore d, 1
     weekDays: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
       "Friday", "Saturday" ]
     mseUrl: (d) -> # generate mse url for date d

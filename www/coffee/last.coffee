@@ -2,8 +2,8 @@ angular.module 'app.last', []
 
 .controller 'Last', ($scope, $http, utils) ->
   date = new Date()
-  date = if date.getHours < 14 then utils.prevValidDate date else date
-
+  date = if date.getHours() < 14 then utils.prevValidDate date else date
+  
   loadLast = (date) ->
     $http.get utils.mseUrl(date), { responseType: "arraybuffer" }
       .then (res) -> # success
@@ -22,42 +22,64 @@ angular.module 'app.last', []
         rcount    = ws['!rows'].length
         console.log "Total rows: #{ rcount }"
 
-        h = { }
-        for r in [8 .. rcount]
-          Ir = "I#{ r }"  # number of shares
+        inbonds = no
+        trns    = [ ]
+        bonds   = [ ]
+        change  = { win: 0, loss: 0, even: 0 }
+        totals  = { trns: 0, bonds: 0 }
+        for r in [4 .. rcount]
           Ar = "A#{ r }"  # company name
           Br = "B#{ r }"  # average price per share (non-block)
+          Cr = "C#{ r }"  # raise percent
           Hr = "H#{ r }"  # price per share for block trns
-          continue unless ws[Ir]? # header/divider row
-          continue if     ws[Ir].v <= 0
-          unless h[ws[Ar].v]?
-            h[ws[Ar].v] =
-              price:  if ws[Br]? then ws[Br].v else ws[Hr].v
-              shares: ws[Ir].v
-              count:  1
+          Ir = "I#{ r }"  # number of shares
+          Jr = "J#{ r }"  # turnover (expressed in x1000)
+
+          if ws[Ar].v.includes "обврзници"
+            inbonds = yes
+            continue
+
+          inbonds = no  if inbonds and !ws[Jr]?
+          continue if !ws[Ir]? or !ws[Jr]?
+          continue if  ws[Ir].v <= 0
+          unless inbonds
+            trns.push {
+              company:  ws[Ar].v
+              raise:    if ws[Cr]? then ws[Cr].v else null
+              turnover: ws[Jr].v * 1000
+              shares:   ws[Ir].v
+              price:    if !ws[Br]? then ws[Hr].v else ws[Br].v
+            }
+            switch
+              when !ws[Cr]?      then
+              when ws[Cr].v  < 0 then change.loss++
+              when ws[Cr].v is 0 then change.even++
+              when ws[Cr].v  > 0 then change.win++
+            totals.trns += ws[Jr].v * 1000
           else
-            h[ws[Ar].v].count++
-            h[ws[Ar].v].price   += if ws[Br]? then ws[Br].v else ws[Hr].v
-            h[ws[Ar].v].shares  += ws[Ir].v
-        
-        trns = [ ]
-        total = 0
-        for name in Object.keys(h).sort()
-          trns.push {
-            name:   name
-            price:  h[name].price / h[name].count
-            shares: h[name].shares
-          }
-          total += h[name].price / h[name].count * h[name].shares
-        
-        $scope.date = date
-        $scope.trns = trns
-        $scope.total = total
+            bonds.push {
+              title:    ws[Ar].v
+              qty:      ws[Ir].v
+              turnover: ws[Jr].v * 1000
+              price:    ws[Br].v
+            }
+            totals.bonds += ws[Jr].v * 1000
+         
+        $scope.date   = date
+        $scope.trns   = trns
+        $scope.bonds  = bonds
+        $scope.totals = totals
+        $scope.change = change
         console.log trns
       , (res) -> # 
         if res.status == 404 # file not found!
-          loadLast prevValidDate(d)
+          loadLast utils.prevValidDate(d)
         else
           console.log "Received status: #{ res.status }"
 
   loadLast date
+  $scope.changeColor = (t) ->
+    switch
+      when t == null   then # no coloring
+      when t.raise < -2 then 'assertive'
+      when t.raise > +2 then 'balanced'
