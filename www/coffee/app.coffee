@@ -27,7 +27,8 @@ angular.module 'app', ['ionic', 'ionic-datepicker', 'app.last',
     daysBefore: (d, n) -> # returns n days before
       new Date(d.getTime() - n * 24 * 60 * 60 * 1000)
     fmtYMD: (d) -> # returns YYYYMMMDD for date d
-      d.toISOString().slice(0, 10).replace /-/g, ""
+      (new Date(d.getTime() - 60000*d.getTimezoneOffset()))
+        .toISOString().slice(0, 10).replace /-/g, ""
     prevValidDate:  (d) ->
       switch d.getDay()
         when 0 then utils.daysBefore d, 2

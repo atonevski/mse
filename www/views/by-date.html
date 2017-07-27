@@ -1,14 +1,74 @@
-<ion-view hide-back-button='false' align-title='center'>
-  <ion-nav-bar class='bar-stable' align-title='center'>
+<ion-view  align-title='center'>
     <ion-nav-title align='center'><i class="ion-edit"></i>&nbsp;By date
     </ion-nav-title>
-  </ion-nav-bar>
   <ion-pane>
     <ion-content>
-      <h3>Select date</h3>
-      <button class='button button-full button-positive' ng-click='openDatePicker()'>
-        Date picker
-      </button>
+      <div class='row'>
+        <div class='col text-right'>
+          <button class='button button-small button-positive icon-left ion-calendar'
+                  ng-click='openDatePicker()'>
+            Date picker
+          </button>
+        </div>
+      </div>
+      <div class='list card' ng-if='date'>
+        <h4 class='text-center'>Sales for {{ date | date: 'EEEE, MMMM d yyyy' }}</h4>
+        <div class='item item-divider'>
+          <div class='row row-no-padding'>
+            <div class='col col-60'>Company</div>
+            <div class='col col-10 text-right'>Price⇅</div>
+            <div class='col col-11 text-right'>Shares</div>
+            <div class='col col-19 text-right'>Total</div>
+          </div>
+        </div>
+        <div class='item no-padding text-wrap' ng-repeat='t in trns'>
+          <div class='row row-no-padding'>
+            <div class='col col-60 cname'>{{ t.company }}</div>
+            <div class='col col-10 text-right {{ changeColor(t) }}'>{{ t.price | number: 0 }}</div>
+            <div class='col col-11 text-right'>{{ t.shares | number: 0 }}</div>
+            <div class='col col-19 text-right'>{{ t.turnover | number: 0 }}</div>
+          </div>
+        </div>
+        <div>
+          <h4>Total:&nbsp;{{ totals.trns | number: 0 }}</h4>
+          <ion-list>
+            <ion-item class='no-padding'>
+              Winners:&nbsp;{{ change.win | number: 0 }}
+            </ion-item>
+            <ion-item class='no-padding'>
+              Loosers:&nbsp;{{ change.loss | number: 0 }}
+            </ion-item>
+            <ion-item class='no-padding'>
+              Even:&nbsp;{{ change.even | number: 0 }}
+            </ion-item>
+          </ion-list>
+        </div>
+      </div>
+      <div class='list card' ng-if='date'>
+        <h4 class='text-center'>Bonds sales for {{ date | date: 'EEEE, MMMM d yyyy' }}</h4>
+        <div class='item item-divider'>
+          <div class='row row-no-padding'>
+            <div class='col col-60'>Title</div>
+            <div class='col col-6 text-right'>Price</div>
+            <div class='col col-12 text-right'>Qty</div>
+            <div class='col col text-right'>Total</div>
+          </div>
+        </div>
+        <div class='item no-padding text-wrap' ng-repeat='b in bonds'>
+          <div class='row row-no-padding'>
+            <div class='col col-60 cname'>{{ b.title }}</div>
+            <div class='col col-6 text-right'>{{ b.price | number: 0 }}</div>
+            <div class='col col-12 text-right'>{{ b.qty | number: 0 }}</div>
+            <div class='col col text-right'>{{ b.turnover | number: 0 }}</div>
+          </div>
+        </div>
+        <div>
+          <h4>Total:&nbsp;{{ totals.bonds | number: 0 }}</h4>
+        </div>
+      </div>
+      <div class='list card' ng-if='date'>
+        <h4>Total sales: {{ totals.trns + totals.bonds | number: 0 }}</h4>
+      </div>
     </ion-content>
   </ion-pane>
 </ion-view>

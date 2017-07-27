@@ -1,12 +1,15 @@
 angular.module 'app.last', []
 
-.controller 'Last', ($scope, $http, utils) ->
+.controller 'Last', ($scope, $http, utils, $ionicLoading) ->
   date = new Date()
   date = if date.getHours() < 14 then utils.prevValidDate date else date
   
   loadLast = (date) ->
+    $ionicLoading.show()
     $http.get utils.mseUrl(date), { responseType: "arraybuffer" }
       .then (res) -> # success
+        $ionicLoading.hide() # stop busy indicator
+
         console.log "Successful load #{ d }"
         console.log res
         console.log utils.mseUrl(date)
@@ -71,9 +74,13 @@ angular.module 'app.last', []
         $scope.totals = totals
         $scope.change = change
         console.log trns
-      , (res) -> # 
+      , (res) -> # error (even when http 404
+        $ionicLoading.show {
+          template: "Can't download xls (#{ res.status }, #{ res.statusText })"
+          duration: 3000
+        }
         if res.status == 404 # file not found!
-          loadLast utils.prevValidDate(d)
+          loadLast utils.prevValidDate(date)
         else
           console.log "Received status: #{ res.status }"
 
