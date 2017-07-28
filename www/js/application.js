@@ -1,4 +1,4 @@
-angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date']).run(function($ionicPlatform) {
+angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', 'app.by.week']).run(function($ionicPlatform) {
   return $ionicPlatform.ready(function() {
     if (window.cordova && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
@@ -13,6 +13,9 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date']).
   return utils = {
     daysBefore: function(d, n) {
       return new Date(d.getTime() - n * 24 * 60 * 60 * 1000);
+    },
+    daysAfter: function(d, n) {
+      return new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
     },
     fmtYMD: function(d) {
       return (new Date(d.getTime() - 60000 * d.getTimezoneOffset())).toISOString().slice(0, 10).replace(/-/g, "");
@@ -47,6 +50,10 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date']).
     url: '/by-date',
     templateUrl: 'views/by-date.html',
     controller: 'ByDate'
+  }).state('by-week', {
+    url: '/by-week',
+    templateUrl: 'views/by-week.html',
+    controller: 'ByWeek'
   });
   return $urlRouterProvider.otherwise('/home');
 }).controller('Main', function($scope, utils) {
@@ -185,6 +192,40 @@ angular.module('app.by.date', []).controller('ByDate', function($scope, ionicDat
       });
       return console.log("(by-date) Received status: " + res.status);
     });
+  };
+});
+
+angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, utils, ionicDatePicker, $q) {
+  var obj, today;
+  today = new Date();
+  obj = {
+    callback: function(v) {
+      var date, friday, monday, results;
+      v = new Date(v);
+      console.log(utils.fmtYMD(v));
+      today = new Date();
+      monday = utils.daysBefore(v, v.getDay() - 1);
+      friday = utils.daysAfter(v, 5 - v.getDay());
+      console.log("week interval:", utils.fmtYMD(monday), "-", utils.fmtYMD(friday));
+      console.log(monday < friday);
+      date = monday;
+      results = [];
+      while (date <= friday) {
+        console.log(utils.fmtYMD(date));
+        results.push(date = utils.daysAfter(date, 1));
+      }
+      return results;
+    },
+    disableWeekdays: [0, 6],
+    from: new Date(2012, 1, 1),
+    to: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    inputDate: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    templateType: 'popup',
+    mondayFirst: true,
+    closeOnSelect: true
+  };
+  return $scope.openDatePicker = function() {
+    return ionicDatePicker.openDatePicker(obj);
   };
 });
 
