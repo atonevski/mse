@@ -21,3 +21,16 @@
   padding-left: 0.1em !important;
   padding-right: 0.1em !important;
 }
+.list.weekly {
+  font-family: 'Roboto', sans-serif;
+}
+.weekly-company {
+  padding: 1px .5em 1px .5em;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+}
+.weekly-totals {
+ border-style: solid;
+ border-width: 0.6px 0 0 0;
+ font-weight: bold;
+}

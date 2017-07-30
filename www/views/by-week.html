@@ -11,6 +11,89 @@
           </button>
         </div>
       </div>
+      <div class='list card' ng-if='from && to'>
+        <h4 class='text-center'>Weekly sales
+          {{ from | date: 'MMM d y' }}&mdash;{{ to | date: 'MMM d y' }}</h4>
+        <div class='item item-divider' ng-repeat='(name, trns) in company'>
+          <div class='row weekly-company'>
+            <div class='col text-left'>{{ name }}</div>
+          </div>
+          <div class='item item-divider'>
+            <div class='row row-no-padding'>
+              <div class='col col-30'>Date</div>
+              <div class='col col-20 text-right'>Price⇅</div>
+              <div class='col col-20 text-right'>Shares</div>
+              <div class='col col-30 text-right'>Total</div>
+            </div>
+          </div>
+          <!-- daily transactions -->
+          <div class='item no-padding text-wrap' ng-repeat='t in trns'>
+            <div class='row row-no-padding'>
+              <div class='col col-30 cname'>{{ t.date | date: 'MMM d, y' }}</div>
+              <div class='col col-20 text-right {{ changeColor(t) }}'>
+                {{ t.price | number: 0 }}</div>
+              <div class='col col-20 text-right'>{{ t.shares | number: 0 }}</div>
+              <div class='col col-30 text-right'>{{ t.turnover | number: 0 }}</div>
+            </div>
+          </div>
+          <!-- transactions totals -->
+          <div class='item no-padding text-wrap'>
+            <div class='row row-no-padding'>
+              <div class='col col-offset-50 col-20 text-right weekly-totals'>
+                {{ totalShares(trns) | number: 0 }}</div>
+              <div class='col col-30 text-right weekly-totals'>
+                {{ totalTurnover(trns) | number: 0 }}</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4>Total:&nbsp;{{ totals.companies | number: 0 }}</h4>
+          <ion-list>
+            <ion-item class='no-padding'>
+              Winners:&nbsp;{{ change.win | number: 0 }}
+            </ion-item>
+            <ion-item class='no-padding'>
+              Loosers:&nbsp;{{ change.loss | number: 0 }}
+            </ion-item>
+            <ion-item class='no-padding'>
+              Even:&nbsp;{{ change.even | number: 0 }}
+            </ion-item>
+          </ion-list>
+        </div>
+      </div>
+      <div class='list card' ng-if='from && to'>
+        <h4 class='text-center'>Weekly bonds sales
+          {{ from | date: 'MMM d y' }}&mdash;{{ to | date: 'MMM d y' }}</h4>
+        <div class='item item-divider' ng-repeat='(name, trns) in bonds'>
+          <div class='row weekly-company'>
+            <div class='col text-left'>{{ name }}</div>
+          </div>
+          <div class='item item-divider'>
+            <div class='row row-no-padding'>
+              <div class='col col-30'>Date</div>
+              <div class='col col-20 text-right'>Price⇅</div>
+              <div class='col col-20 text-right'>Qty</div>
+              <div class='col col-30 text-right'>Total</div>
+            </div>
+          </div>
+          <!-- daily transactions -->
+          <div class='item no-padding text-wrap' ng-repeat='t in trns'>
+            <div class='row row-no-padding'>
+              <div class='col col-30 cname'>{{ t.date | date: 'MMM d, y' }}</div>
+              <div class='col col-20 text-right {{ changeColor(t) }}'>
+                {{ t.price | number: 0 }}</div>
+              <div class='col col-20 text-right'>{{ t.qty | number: 0 }}</div>
+              <div class='col col-30 text-right'>{{ t.turnover | number: 0 }}</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4>Total:&nbsp;{{ totals.bonds | number: 0 }}</h4>
+        </div>
+      </div>
+      <div class='list card' ng-if='from && to'>
+        <h4>Total sales: {{ totals.companies + totals.bonds | number: 0 }}</h4>
+      </div>
     </ion-content>
   </ion-pane>
 </ion-view>

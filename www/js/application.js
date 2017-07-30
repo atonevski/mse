@@ -196,25 +196,161 @@ angular.module('app.by.date', []).controller('ByDate', function($scope, ionicDat
 });
 
 angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, utils, ionicDatePicker, $q) {
-  var obj, today;
+  var bonds, change, company, mkToDate, obj, parseXLS, processWbooks, today, totals;
+  company = {};
+  bonds = {};
+  change = {
+    win: 0,
+    loss: 0,
+    even: 0
+  };
+  totals = {
+    companies: 0,
+    bonds: 0
+  };
+  processWbooks = function(wbs) {
+    var Ar, Br, Cr, Hr, Ir, Jr, date, inbonds, j, len, r, rcount, results, wb, ws;
+    results = [];
+    for (j = 0, len = wbs.length; j < len; j++) {
+      wb = wbs[j];
+      ws = wb.Sheets.Sheet1;
+      rcount = ws['!rows'].length;
+      inbonds = false;
+      results.push((function() {
+        var k, ref, results1;
+        results1 = [];
+        for (r = k = 4, ref = rcount; 4 <= ref ? k <= ref : k >= ref; r = 4 <= ref ? ++k : --k) {
+          date = mkToDate(ws['A2'].v.slice(ws['A2'].v.length - 10));
+          Ar = "A" + r;
+          Br = "B" + r;
+          Cr = "C" + r;
+          Hr = "H" + r;
+          Ir = "I" + r;
+          Jr = "J" + r;
+          if (ws[Ar].v.includes("обврзници")) {
+            inbonds = true;
+            continue;
+          }
+          if (inbonds && (ws[Jr] == null)) {
+            inbonds = false;
+          }
+          if ((ws[Ir] == null) || (ws[Jr] == null)) {
+            continue;
+          }
+          if (ws[Ir].v <= 0) {
+            continue;
+          }
+          if (!inbonds) {
+            if (company[ws[Ar].v] == null) {
+              company[ws[Ar].v] = [];
+            }
+            company[ws[Ar].v].push({
+              date: date,
+              raise: ws[Cr] != null ? ws[Cr].v : null,
+              turnover: ws[Jr].v * 1000,
+              shares: ws[Ir].v,
+              price: ws[Br] == null ? ws[Hr].v : ws[Br].v
+            });
+            switch (false) {
+              case !(ws[Cr] == null):
+                break;
+              case !(ws[Cr].v < 0):
+                change.loss++;
+                break;
+              case ws[Cr].v !== 0:
+                change.even++;
+                break;
+              case !(ws[Cr].v > 0):
+                change.win++;
+            }
+            results1.push(totals.companies += ws[Jr].v * 1000);
+          } else {
+            if (bonds[ws[Ar].v] == null) {
+              bonds[ws[Ar].v] = [];
+            }
+            bonds[ws[Ar].v].push({
+              date: date,
+              qty: ws[Ir].v,
+              turnover: ws[Jr].v * 1000,
+              price: ws[Br].v
+            });
+            results1.push(totals.bonds += ws[Jr].v * 1000);
+          }
+        }
+        return results1;
+      })());
+    }
+    return results;
+  };
+  parseXLS = function(res) {
+    var arr, bstr, buf, d, data, i;
+    buf = res.data;
+    data = new Uint8Array(buf);
+    arr = [];
+    for (i in data) {
+      d = data[i];
+      arr[i] = String.fromCharCode(d);
+    }
+    bstr = arr.join('');
+    return XLSX.read(bstr, {
+      type: "binary"
+    });
+  };
+  mkToDate = function(s) {
+    var a;
+    a = s.split('.').reverse().map(function(e) {
+      return parseInt(e);
+    });
+    return new Date(a[0], a[1], a[2]);
+  };
   today = new Date();
   obj = {
     callback: function(v) {
-      var date, friday, monday, results;
+      var all, date, friday, monday, ndays, p, promises, wbs;
       v = new Date(v);
       console.log(utils.fmtYMD(v));
       today = new Date();
       monday = utils.daysBefore(v, v.getDay() - 1);
       friday = utils.daysAfter(v, 5 - v.getDay());
-      console.log("week interval:", utils.fmtYMD(monday), "-", utils.fmtYMD(friday));
-      console.log(monday < friday);
-      date = monday;
-      results = [];
-      while (date <= friday) {
-        console.log(utils.fmtYMD(date));
-        results.push(date = utils.daysAfter(date, 1));
+      if (friday > today) {
+        friday = today;
       }
-      return results;
+      ndays = 0;
+      date = monday;
+      promises = [];
+      while (date <= friday) {
+        p = $http.get(utils.mseUrl(date), {
+          responseType: "arraybuffer"
+        });
+        p = p["catch"](function(e) {
+          return null;
+        });
+        promises.push(p);
+        date = utils.daysAfter(date, 1);
+        ndays++;
+      }
+      all = $q.all(promises);
+      wbs = [];
+      return all.then(function(res) {
+        var j, len, r;
+        for (j = 0, len = res.length; j < len; j++) {
+          r = res[j];
+          if (!r) {
+            continue;
+          }
+          wbs.push(parseXLS(r));
+        }
+        processWbooks(wbs);
+        $scope.company = company;
+        $scope.bonds = bonds;
+        $scope.totals = totals;
+        $scope.change = change;
+        $scope.from = monday;
+        return $scope.to = friday;
+      }, function(res) {
+        console.log("Load errors:");
+        return console.log(res);
+      });
     },
     disableWeekdays: [0, 6],
     from: new Date(2012, 1, 1),
@@ -224,8 +360,36 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
     mondayFirst: true,
     closeOnSelect: true
   };
-  return $scope.openDatePicker = function() {
+  $scope.openDatePicker = function() {
     return ionicDatePicker.openDatePicker(obj);
+  };
+  $scope.changeColor = function(t) {
+    switch (false) {
+      case t !== null:
+        break;
+      case !(t.raise < 0):
+        return 'assertive';
+      case !(t.raise > 0):
+        return 'balanced';
+    }
+  };
+  $scope.totalShares = function(trns) {
+    var j, len, t, total;
+    total = 0;
+    for (j = 0, len = trns.length; j < len; j++) {
+      t = trns[j];
+      total += t.shares;
+    }
+    return total;
+  };
+  return $scope.totalTurnover = function(trns) {
+    var j, len, t, total;
+    total = 0;
+    for (j = 0, len = trns.length; j < len; j++) {
+      t = trns[j];
+      total += t.turnover;
+    }
+    return total;
   };
 });
 
