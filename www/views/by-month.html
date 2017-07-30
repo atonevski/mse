@@ -1,6 +1,6 @@
 <ion-view  align-title='center'>
-    <ion-nav-title align='center'><i class="ion-bookmark"></i>&nbsp;
-      Weekly sales
+    <ion-nav-title align='center'><i class="ion-calendar"></i>&nbsp;
+      Monthly sales
     </ion-nav-title>
   <ion-pane>
     <ion-content>
@@ -13,8 +13,7 @@
         </div>
       </div>
       <div class='list card' ng-if='from && to'>
-        <h4 class='text-center'>Weekly sales
-          {{ from | date: 'MMM d y' }}&mdash;{{ to | date: 'MMM d y' }}</h4>
+        <h4 class='text-center'>Monthly sales {{ from | date: 'MMMM y' }}</h4>
         <div class='item item-divider' ng-repeat='(name, trns) in company'>
           <div class='row weekly-company'>
             <div class='col text-left'>{{ name }}</div>
@@ -63,7 +62,7 @@
         </div>
       </div>
       <div class='list card' ng-if='from && to'>
-        <h4 class='text-center'>Weekly bonds sales
+        <h4 class='text-center'>Monthly bonds sales
           {{ from | date: 'MMM d y' }}&mdash;{{ to | date: 'MMM d y' }}</h4>
         <div class='item item-divider' ng-repeat='(name, trns) in bonds'>
           <div class='row weekly-company'>

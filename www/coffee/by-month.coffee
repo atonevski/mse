@@ -1,6 +1,6 @@
-angular.module 'app.by.week', []
+angular.module 'app.by.month', []
 
-.controller 'ByWeek', ($scope, $http, utils, ionicDatePicker,
+.controller 'ByMonth', ($scope, $http, utils, ionicDatePicker,
                        $ionicLoading, $q) ->
   company = { }
   bonds   = { }
@@ -79,15 +79,25 @@ angular.module 'app.by.week', []
       v = new Date(v)
       console.log utils.fmtYMD(v)
       today  = new Date()
-      monday = utils.daysBefore v, v.getDay() - 1
-      friday = utils.daysAfter v, 5 - v.getDay()
-      friday = today if friday > today  # for current week
+      [from, to] = utils.startEndOfMonth v
+      to = today if to > today
+      console.log "start, end:", from, to
+
+      # reset values
+      company = { }
+      bonds   = { }
+      change  = { win: 0, loss: 0, even: 0 }
+      totals  = { companies: 0, bonds: 0 }
 
       ndays = 0
-      date  = monday
+      date  = from
       promises = []
       $ionicLoading.show()
-      while date <= friday
+      while date <= to
+        # skip saturdays and sundays
+        if date.getDay() == 0 or date.getDay() == 6
+          date = utils.daysAfter date, 1
+          continue
         p = $http.get(utils.mseUrl(date), { responseType: "arraybuffer" })
         p = p.catch (e) -> null # catch errors (404)
         promises.push p
@@ -107,8 +117,8 @@ angular.module 'app.by.week', []
         $scope.bonds    = bonds
         $scope.totals   = totals
         $scope.change   = change
-        $scope.from     = monday
-        $scope.to       = friday
+        $scope.from     = from
+        $scope.to       = to
       , (res) -> # errors
         $ionicLoading.show {
           template: "Can't download xls (#{ res.status }, #{ res.statusText })"

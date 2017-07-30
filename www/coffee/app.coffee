@@ -5,7 +5,7 @@
 # in a <body> attribute in index.html) the 2nd parameter is an array of
 # 'requires'
 angular.module 'app', ['ionic', 'ionic-datepicker', 'app.last',
-                       'app.by.date', 'app.by.week'] # don't forget your modules
+      'app.by.date', 'app.by.week', 'app.by.month'] # don't forget your modules
 
 .run ($ionicPlatform) ->
   $ionicPlatform.ready () ->
@@ -28,6 +28,10 @@ angular.module 'app', ['ionic', 'ionic-datepicker', 'app.last',
       new Date(d.getTime() - n * 24 * 60 * 60 * 1000)
     daysAfter: (d, n) -> # returns n days before
       new Date(d.getTime() + n * 24 * 60 * 60 * 1000)
+    startEndOfMonth: (d) ->
+      start = new Date(d.getFullYear(), d.getMonth(), 1)
+      end   = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+      [start, end]
     fmtYMD: (d) -> # returns YYYYMMMDD for date d
       (new Date(d.getTime() - 60000*d.getTimezoneOffset()))
         .toISOString().slice(0, 10).replace /-/g, ""
@@ -66,6 +70,11 @@ angular.module 'app', ['ionic', 'ionic-datepicker', 'app.last',
       url:          '/by-week'
       templateUrl:  'views/by-week.html'
       controller:   'ByWeek'
+    }
+    .state 'by-month', {
+      url:          '/by-month'
+      templateUrl:  'views/by-month.html'
+      controller:   'ByMonth'
     }
 
   $urlRouterProvider.otherwise '/home'

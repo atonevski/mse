@@ -1,4 +1,4 @@
-angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', 'app.by.week']).run(function($ionicPlatform) {
+angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', 'app.by.week', 'app.by.month']).run(function($ionicPlatform) {
   return $ionicPlatform.ready(function() {
     if (window.cordova && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
@@ -16,6 +16,12 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', '
     },
     daysAfter: function(d, n) {
       return new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
+    },
+    startEndOfMonth: function(d) {
+      var end, start;
+      start = new Date(d.getFullYear(), d.getMonth(), 1);
+      end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return [start, end];
     },
     fmtYMD: function(d) {
       return (new Date(d.getTime() - 60000 * d.getTimezoneOffset())).toISOString().slice(0, 10).replace(/-/g, "");
@@ -54,6 +60,10 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', '
     url: '/by-week',
     templateUrl: 'views/by-week.html',
     controller: 'ByWeek'
+  }).state('by-month', {
+    url: '/by-month',
+    templateUrl: 'views/by-month.html',
+    controller: 'ByMonth'
   });
   return $urlRouterProvider.otherwise('/home');
 }).controller('Main', function($scope, utils) {
@@ -195,7 +205,7 @@ angular.module('app.by.date', []).controller('ByDate', function($scope, ionicDat
   };
 });
 
-angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, utils, ionicDatePicker, $q) {
+angular.module('app.by.month', []).controller('ByMonth', function($scope, $http, utils, ionicDatePicker, $ionicLoading, $q) {
   var bonds, change, company, mkToDate, obj, parseXLS, processWbooks, today, totals;
   company = {};
   bonds = {};
@@ -301,7 +311,226 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
     a = s.split('.').reverse().map(function(e) {
       return parseInt(e);
     });
-    return new Date(a[0], a[1], a[2]);
+    return new Date(a[0], a[1] - 1, a[2]);
+  };
+  today = new Date();
+  obj = {
+    callback: function(v) {
+      var all, date, from, ndays, p, promises, ref, to, wbs;
+      v = new Date(v);
+      console.log(utils.fmtYMD(v));
+      today = new Date();
+      ref = utils.startEndOfMonth(v), from = ref[0], to = ref[1];
+      if (to > today) {
+        to = today;
+      }
+      console.log("start, end:", from, to);
+      company = {};
+      bonds = {};
+      change = {
+        win: 0,
+        loss: 0,
+        even: 0
+      };
+      totals = {
+        companies: 0,
+        bonds: 0
+      };
+      ndays = 0;
+      date = from;
+      promises = [];
+      $ionicLoading.show();
+      while (date <= to) {
+        if (date.getDay() === 0 || date.getDay() === 6) {
+          date = utils.daysAfter(date, 1);
+          continue;
+        }
+        p = $http.get(utils.mseUrl(date), {
+          responseType: "arraybuffer"
+        });
+        p = p["catch"](function(e) {
+          return null;
+        });
+        promises.push(p);
+        date = utils.daysAfter(date, 1);
+        ndays++;
+      }
+      all = $q.all(promises);
+      wbs = [];
+      return all.then(function(res) {
+        var j, len, r;
+        $ionicLoading.hide();
+        for (j = 0, len = res.length; j < len; j++) {
+          r = res[j];
+          if (!r) {
+            continue;
+          }
+          wbs.push(parseXLS(r));
+        }
+        processWbooks(wbs);
+        $scope.company = company;
+        $scope.bonds = bonds;
+        $scope.totals = totals;
+        $scope.change = change;
+        $scope.from = from;
+        return $scope.to = to;
+      }, function(res) {
+        $ionicLoading.show({
+          template: "Can't download xls (" + res.status + ", " + res.statusText + ")",
+          duration: 3000
+        });
+        console.log("Load errors:");
+        return console.log(res);
+      });
+    },
+    disableWeekdays: [0, 6],
+    from: new Date(2012, 1, 1),
+    to: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    inputDate: today.getHours() < 14 ? utils.prevValidDate(today) : today,
+    templateType: 'popup',
+    mondayFirst: true,
+    closeOnSelect: true
+  };
+  $scope.openDatePicker = function() {
+    return ionicDatePicker.openDatePicker(obj);
+  };
+  $scope.changeColor = function(t) {
+    switch (false) {
+      case t !== null:
+        break;
+      case !(t.raise < 0):
+        return 'assertive';
+      case !(t.raise > 0):
+        return 'balanced';
+    }
+  };
+  $scope.totalShares = function(trns) {
+    var j, len, t, total;
+    total = 0;
+    for (j = 0, len = trns.length; j < len; j++) {
+      t = trns[j];
+      total += t.shares;
+    }
+    return total;
+  };
+  return $scope.totalTurnover = function(trns) {
+    var j, len, t, total;
+    total = 0;
+    for (j = 0, len = trns.length; j < len; j++) {
+      t = trns[j];
+      total += t.turnover;
+    }
+    return total;
+  };
+});
+
+angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, utils, ionicDatePicker, $ionicLoading, $q) {
+  var bonds, change, company, mkToDate, obj, parseXLS, processWbooks, today, totals;
+  company = {};
+  bonds = {};
+  change = {
+    win: 0,
+    loss: 0,
+    even: 0
+  };
+  totals = {
+    companies: 0,
+    bonds: 0
+  };
+  processWbooks = function(wbs) {
+    var Ar, Br, Cr, Hr, Ir, Jr, date, inbonds, j, len, r, rcount, results, wb, ws;
+    results = [];
+    for (j = 0, len = wbs.length; j < len; j++) {
+      wb = wbs[j];
+      ws = wb.Sheets.Sheet1;
+      rcount = ws['!rows'].length;
+      inbonds = false;
+      results.push((function() {
+        var k, ref, results1;
+        results1 = [];
+        for (r = k = 4, ref = rcount; 4 <= ref ? k <= ref : k >= ref; r = 4 <= ref ? ++k : --k) {
+          date = mkToDate(ws['A2'].v.slice(ws['A2'].v.length - 10));
+          Ar = "A" + r;
+          Br = "B" + r;
+          Cr = "C" + r;
+          Hr = "H" + r;
+          Ir = "I" + r;
+          Jr = "J" + r;
+          if (ws[Ar].v.includes("обврзници")) {
+            inbonds = true;
+            continue;
+          }
+          if (inbonds && (ws[Jr] == null)) {
+            inbonds = false;
+          }
+          if ((ws[Ir] == null) || (ws[Jr] == null)) {
+            continue;
+          }
+          if (ws[Ir].v <= 0) {
+            continue;
+          }
+          if (!inbonds) {
+            if (company[ws[Ar].v] == null) {
+              company[ws[Ar].v] = [];
+            }
+            company[ws[Ar].v].push({
+              date: date,
+              raise: ws[Cr] != null ? ws[Cr].v : null,
+              turnover: ws[Jr].v * 1000,
+              shares: ws[Ir].v,
+              price: ws[Br] == null ? ws[Hr].v : ws[Br].v
+            });
+            switch (false) {
+              case !(ws[Cr] == null):
+                break;
+              case !(ws[Cr].v < 0):
+                change.loss++;
+                break;
+              case ws[Cr].v !== 0:
+                change.even++;
+                break;
+              case !(ws[Cr].v > 0):
+                change.win++;
+            }
+            results1.push(totals.companies += ws[Jr].v * 1000);
+          } else {
+            if (bonds[ws[Ar].v] == null) {
+              bonds[ws[Ar].v] = [];
+            }
+            bonds[ws[Ar].v].push({
+              date: date,
+              qty: ws[Ir].v,
+              turnover: ws[Jr].v * 1000,
+              price: ws[Br].v
+            });
+            results1.push(totals.bonds += ws[Jr].v * 1000);
+          }
+        }
+        return results1;
+      })());
+    }
+    return results;
+  };
+  parseXLS = function(res) {
+    var arr, bstr, buf, d, data, i;
+    buf = res.data;
+    data = new Uint8Array(buf);
+    arr = [];
+    for (i in data) {
+      d = data[i];
+      arr[i] = String.fromCharCode(d);
+    }
+    bstr = arr.join('');
+    return XLSX.read(bstr, {
+      type: "binary"
+    });
+  };
+  mkToDate = function(s) {
+    var a;
+    a = s.split('.').reverse().map(function(e) {
+      return parseInt(e);
+    });
+    return new Date(a[0], a[1] - 1, a[2]);
   };
   today = new Date();
   obj = {
@@ -318,6 +547,7 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
       ndays = 0;
       date = monday;
       promises = [];
+      $ionicLoading.show();
       while (date <= friday) {
         p = $http.get(utils.mseUrl(date), {
           responseType: "arraybuffer"
@@ -333,6 +563,7 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
       wbs = [];
       return all.then(function(res) {
         var j, len, r;
+        $ionicLoading.hide();
         for (j = 0, len = res.length; j < len; j++) {
           r = res[j];
           if (!r) {
@@ -348,6 +579,10 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
         $scope.from = monday;
         return $scope.to = friday;
       }, function(res) {
+        $ionicLoading.show({
+          template: "Can't download xls (" + res.status + ", " + res.statusText + ")",
+          duration: 3000
+        });
         console.log("Load errors:");
         return console.log(res);
       });
