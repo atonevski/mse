@@ -544,6 +544,17 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
       if (friday > today) {
         friday = today;
       }
+      company = {};
+      bonds = {};
+      change = {
+        win: 0,
+        loss: 0,
+        even: 0
+      };
+      totals = {
+        companies: 0,
+        bonds: 0
+      };
       ndays = 0;
       date = monday;
       promises = [];

@@ -107,11 +107,12 @@ angular.module 'app.by.month', []
       wbs = []
       all
       .then (res) -> # successes
-        $ionicLoading.hide()
         for r in res
           continue unless r # skip 404
           wbs.push parseXLS r
         processWbooks wbs
+
+        $ionicLoading.hide()
         # console.log company
         $scope.company  = company
         $scope.bonds    = bonds

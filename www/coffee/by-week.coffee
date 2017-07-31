@@ -83,6 +83,12 @@ angular.module 'app.by.week', []
       friday = utils.daysAfter v, 5 - v.getDay()
       friday = today if friday > today  # for current week
 
+      # reset values
+      company = { }
+      bonds   = { }
+      change  = { win: 0, loss: 0, even: 0 }
+      totals  = { companies: 0, bonds: 0 }
+
       ndays = 0
       date  = monday
       promises = []
@@ -97,11 +103,12 @@ angular.module 'app.by.week', []
       wbs = []
       all
       .then (res) -> # successes
-        $ionicLoading.hide()
         for r in res
           continue unless r # skip 404
           wbs.push parseXLS r
         processWbooks wbs
+
+        $ionicLoading.hide()
         # console.log company
         $scope.company  = company
         $scope.bonds    = bonds
