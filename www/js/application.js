@@ -11,6 +11,7 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', '
 }).factory('utils', function() {
   var utils;
   return utils = {
+    D_NEW_FMT: new Date(Date.parse('2018-08-03')),
     daysBefore: function(d, n) {
       return new Date(d.getTime() - n * 24 * 60 * 60 * 1000);
     },
@@ -24,7 +25,12 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', '
       return [start, end];
     },
     fmtYMD: function(d) {
-      return (new Date(d.getTime() - 60000 * d.getTimezoneOffset())).toISOString().slice(0, 10).replace(/-/g, "");
+      var sep;
+      if (!(d instanceof Date)) {
+        d = new Date(Date.parse(d));
+      }
+      sep = arguments.length > 1 ? arguments[1] : '';
+      return (new Date(d - d.getTimezoneOffset() * 1000 * 60)).toISOString().slice(0, 10).split('-').reverse().join(sep);
     },
     prevValidDate: function(d) {
       switch (d.getDay()) {
@@ -38,7 +44,13 @@ angular.module('app', ['ionic', 'ionic-datepicker', 'app.last', 'app.by.date', '
     },
     weekDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     mseUrl: function(d) {
-      return "http://www.mse.mk/Repository/Reports/MK/ReportMK_1_" + ((utils.fmtYMD(d)) + "_" + (utils.fmtYMD(d)) + ".xls");
+      if (d < utils.D_NEW_FMT) {
+        return "https://www.mse.mk/Repository/Reports/MK/ReportMK_1_" + ((utils.fmtYMD(d)) + "_" + (utils.fmtYMD(d)) + ".xls");
+      } else if (d < (new Date(Date.parse('2019-01-01')))) {
+        return "https://www.mse.mk/Repository/Reports/MK_New/" + ((utils.fmtYMD(d, '.')) + "mk.xls");
+      } else {
+        return ("https://www.mse.mk/Repository/Reports/" + (d.getFullYear()) + "/") + ((utils.fmtYMD(d, '.')) + "mk.xls");
+      }
     }
   };
 }).config(function($stateProvider, $urlRouterProvider) {
@@ -95,9 +107,9 @@ angular.module('app.by.date', []).controller('ByDate', function($scope, ionicDat
     switch (false) {
       case t !== null:
         break;
-      case !(t.raise < -2):
+      case !(t.raise < 0):
         return 'assertive';
-      case !(t.raise > +2):
+      case !(t.raise > 0):
         return 'balanced';
     }
   };
@@ -359,7 +371,6 @@ angular.module('app.by.month', []).controller('ByMonth', function($scope, $http,
       wbs = [];
       return all.then(function(res) {
         var j, len, r;
-        $ionicLoading.hide();
         for (j = 0, len = res.length; j < len; j++) {
           r = res[j];
           if (!r) {
@@ -368,6 +379,7 @@ angular.module('app.by.month', []).controller('ByMonth', function($scope, $http,
           wbs.push(parseXLS(r));
         }
         processWbooks(wbs);
+        $ionicLoading.hide();
         $scope.company = company;
         $scope.bonds = bonds;
         $scope.totals = totals;
@@ -574,7 +586,6 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
       wbs = [];
       return all.then(function(res) {
         var j, len, r;
-        $ionicLoading.hide();
         for (j = 0, len = res.length; j < len; j++) {
           r = res[j];
           if (!r) {
@@ -583,6 +594,7 @@ angular.module('app.by.week', []).controller('ByWeek', function($scope, $http, u
           wbs.push(parseXLS(r));
         }
         processWbooks(wbs);
+        $ionicLoading.hide();
         $scope.company = company;
         $scope.bonds = bonds;
         $scope.totals = totals;
@@ -753,9 +765,9 @@ angular.module('app.last', []).controller('Last', function($scope, $http, utils,
     switch (false) {
       case t !== null:
         break;
-      case !(t.raise < -2):
+      case !(t.raise < 0):
         return 'assertive';
-      case !(t.raise > +2):
+      case !(t.raise > 0):
         return 'balanced';
     }
   };

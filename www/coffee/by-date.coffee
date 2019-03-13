@@ -22,8 +22,8 @@ angular.module 'app.by.date', []
   $scope.changeColor = (t) ->
     switch
       when t == null   then # no coloring
-      when t.raise < -2 then 'assertive'
-      when t.raise > +2 then 'balanced'
+      when t.raise < 0 then 'assertive'
+      when t.raise > 0 then 'balanced'
 
   loadSales = (date) ->
     $scope.date = null

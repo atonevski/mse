@@ -1,14 +1,24 @@
 {
   "name": "mse",
-  "app_id": "mse.atonevski.com.github",
+  "integrations": {
+    "cordova": {}
+  },
   "type": "ionic1",
   "watch": {
-    "sass": ["./scss/**/*.scss"],
-    "coffee": ["./www/coffee/**/*.coffee"]
+    "sass": [
+      "./scss/**/*.scss"
+    ],
+    "coffee": [
+      "./www/coffee/**/*.coffee"
+    ]
   },
   "watchPatterns": [
     "scss/**/*",
     "www/coffee/**/*.coffee"
   ],
-  "gulpStartupTasks": [ "coffee", "sass" ]
+  "gulpStartupTasks": [
+    "coffee",
+    "sass"
+  ],
+  "id": "mse.atonevski.com.github"
 }

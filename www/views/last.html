@@ -8,17 +8,17 @@
         <div class='item item-divider'>
           <div class='row row-no-padding'>
             <div class='col col-60'>Company</div>
-            <div class='col col-10 text-right'>Price⇅</div>
-            <div class='col col-11 text-right'>Shares</div>
-            <div class='col col-19 text-right'>Total</div>
+            <div class='col col-10 text-right'>Price</div>
+            <div class='col col-10 text-right'>Shares</div>
+            <div class='col col-20 text-right'>Total</div>
           </div>
         </div>
         <div class='item no-padding text-wrap' ng-repeat='t in trns'>
           <div class='row row-no-padding'>
             <div class='col col-60 cname'>{{ t.company }}</div>
             <div class='col col-10 text-right {{ changeColor(t) }}'>{{ t.price | number: 0 }}</div>
-            <div class='col col-11 text-right'>{{ t.shares | number: 0 }}</div>
-            <div class='col col-19 text-right'>{{ t.turnover | number: 0 }}</div>
+            <div class='col col-10 text-right'>{{ t.shares | number: 0 }}</div>
+            <div class='col col-20 text-right'>{{ t.turnover | number: 0 }}</div>
           </div>
         </div>
         <div>

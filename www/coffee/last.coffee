@@ -88,5 +88,5 @@ angular.module 'app.last', []
   $scope.changeColor = (t) ->
     switch
       when t == null   then # no coloring
-      when t.raise < -2 then 'assertive'
-      when t.raise > +2 then 'balanced'
+      when t.raise < 0 then 'assertive'
+      when t.raise > 0 then 'balanced'
